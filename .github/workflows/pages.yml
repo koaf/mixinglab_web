@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,8 +29,9 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+        env:
+          PLAYWRIGHT_CHANNEL: chrome
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
