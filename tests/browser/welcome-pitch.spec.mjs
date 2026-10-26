@@ -50,6 +50,9 @@ test('pitch worker applies to WAV output, saves settings, bypasses, and works of
   await page.getByRole('slider', { name: 'ピッチ', exact: true }).fill('12');
   await page.getByRole('button', { name: '適用', exact: true }).click();
   await expect(page.locator('#status')).toHaveText('エフェクトを適用しました。');
+  await page.reload();
+  await expect(page.getByRole('slider', { name: 'ピッチ', exact: true })).toHaveValue('12');
+  await expect(page.locator('#fx-formant')).not.toBeChecked();
   async function exportFrequency() {
     const pending = page.waitForEvent('download'); await page.getByRole('button', { name: '↓ WAV書き出し' }).click();
     const output = await readFile(await (await pending).path());

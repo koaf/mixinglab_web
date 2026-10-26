@@ -283,7 +283,7 @@ const actions = {
     const candidate = { ...t, settings: { ...t.settings, fx } };
     status('エフェクトを準備しています。ピッチ処理中は少しお待ちください…');
     await preparePitchTracks([candidate], await engine.init());
-    t.settings.fx = fx; record('エフェクトを適用'); await restart(); status('エフェクトを適用しました。');
+    t.settings.fx = fx; record('エフェクトを適用'); await restart(); await flushAutosave(); status('エフェクトを適用しました。');
   },
   'reset-fx': async () => { const t = selected(); if (!t) return; t.settings.fx = { ...DEFAULT_FX }; record('エフェクトを初期化'); renderSide(); await restart(); },
   'reset-offset': async () => { const t = selected(); if (!t) return; t.settings.offset = 0; record('クリップを先頭へ移動'); render(); await restart(); },
