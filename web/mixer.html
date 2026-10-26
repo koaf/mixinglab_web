@@ -4,17 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#232323">
-  <meta name="description" content="meloa_web — ブラウザーで使えるマルチトラックMIXアプリ。音源は端末内で処理します。">
+  <meta name="description" content="Meloa WebEditor — ブラウザーで使えるマルチトラックMIXアプリ。音源は端末内で処理します。">
+  <link rel="canonical" href="https://meloa.wbsk.me/mixer.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Meloa WebEditor">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:title" content="Meloa WebEditor ミキサー — 音を重ねる。響きをつくる。">
+  <meta property="og:description" content="最大12トラックのMIX、エフェクト、ピッチ・タイミング調整、WAV書き出しに対応。音源は端末内で処理するブラウザーミキサー。">
+  <meta property="og:url" content="https://meloa.wbsk.me/mixer.html">
+  <meta property="og:image" content="https://meloa.wbsk.me/ogp-mixer.png">
+  <meta property="og:image:secure_url" content="https://meloa.wbsk.me/ogp-mixer.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Meloa WebEditor — 音を重ねる。響きをつくる。マルチトラックとエフェクトの編集画面。">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Meloa WebEditor ミキサー — 音を重ねる。響きをつくる。">
+  <meta name="twitter:description" content="最大12トラックのMIX、エフェクト、ピッチ・タイミング調整、WAV書き出し。音源は端末内で処理します。">
+  <meta name="twitter:image" content="https://meloa.wbsk.me/ogp-mixer.png">
+  <meta name="twitter:image:alt" content="Meloa WebEditorミキサーのマルチトラック編集画面。">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon-256.png">
   <link rel="apple-touch-icon" href="./icons/icon-256.png">
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./tune.css">
-  <title>meloa_web</title>
+  <title>Meloa WebEditor</title>
 </head>
 <body>
   <header>
-    <div class="titlebar"><a href="./?welcome=1" aria-label="トップページ"><img src="./icons/icon-256.png" alt=""></a> meloa_web<span class="spacer"></span><span id="network">ローカル処理</span><button id="install" hidden>アプリをインストール</button></div>
+    <div class="titlebar"><a href="./?welcome=1" aria-label="トップページ"><img src="./icons/icon-256.png" alt=""></a> Meloa WebEditor<span class="spacer"></span><span id="network">ローカル処理</span><button id="install" hidden>アプリをインストール</button></div>
     <nav aria-label="メニュー">
       <details><summary>ファイル</summary><div class="menu"><button data-action="import">音源を読み込み… <kbd>Ctrl+I</kbd></button><button data-action="open">セッションを開く… <kbd>Ctrl+O</kbd></button><button data-action="save">名前を付けて保存… <kbd>Ctrl+S</kbd></button><hr><button data-action="demo">デモセッションを開く</button><button data-action="export">ミックスダウンを書き出し…</button><hr><button data-action="new">新規セッション</button></div></details>
       <details><summary>編集</summary><div class="menu"><button data-action="undo">取り消し <kbd>Ctrl+Z</kbd></button><button data-action="redo">やり直し <kbd>Ctrl+Shift+Z</kbd></button><button data-action="delete">選択トラックを削除</button></div></details>

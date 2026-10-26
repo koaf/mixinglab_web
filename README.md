@@ -1,4 +1,4 @@
-# meloa_web
+# Meloa WebEditor
 
 既存のMeloaのパネル配置・配色を引き継いだ、静的サイトとして動くマルチトラックMIXアプリです。Web Audio APIで音声を端末内で処理し、PWAとしてインストール・オフライン利用できます。
 
@@ -53,7 +53,7 @@ Space / Home / End / 8 / 9 / 0 / `=` / `-` / `\` と Ctrl（MacはCommand）+ I 
 
 ## PWA・GitHub Pages
 
-HTTPSまたはlocalhostでService Workerが有効になります。初回のアプリ・デモ音源のキャッシュが完了するとオフラインで起動できます。対応ブラウザーのインストール操作、iOSではSafariの共有メニューの「ホーム画面に追加」を利用してください。更新が通知されたら、すべてのmeloa_webタブを閉じて開き直してください。アプリを更新するときは `web/sw.js` のキャッシュバージョンも更新します。
+HTTPSまたはlocalhostでService Workerが有効になります。初回のアプリ・デモ音源のキャッシュが完了するとオフラインで起動できます。対応ブラウザーのインストール操作、iOSではSafariの共有メニューの「ホーム画面に追加」を利用してください。更新が通知されたら、すべてのMeloa WebEditorタブを閉じて開き直してください。アプリを更新するときは `web/sw.js` のキャッシュバージョンも更新します。
 
 GitHubの **Settings → Pages → Source → GitHub Actions** を選択します。`.github/workflows/pages.yml` がmainへのpush時にテスト・ビルドし、`dist/` だけをGitHub Pagesへ配信します。相対URLで動くためプロジェクト配下のURLにも対応します。
 

@@ -4,7 +4,7 @@ import { encodeWav } from '../../web/audio.js';
 
 test('PC enters mixer directly; welcome remains accessible', async ({ page }) => {
   await page.goto('/'); await expect(page).toHaveURL(/\/mixer.html$/);
-  await expect(page).toHaveTitle(/meloa_web/);
+  await expect(page).toHaveTitle(/Meloa WebEditor/);
   await page.goto('/?welcome=1');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('いつものMIX');
   await expect(page.locator('#desktop-cta')).toBeVisible();

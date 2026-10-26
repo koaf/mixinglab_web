@@ -68,7 +68,7 @@ function render() {
   $('#editor-tab').classList.toggle('active', !['mixer','tune'].includes(state.view)); $('#mixer-tab').classList.toggle('active', state.view === 'mixer'); $('#tune-tab').classList.toggle('active', state.view === 'tune');
   $('#editor-tab').textContent = `エディター: ${state.name}`;
   $('#duration').textContent = formatTime(sessionDuration(state.tracks));
-  document.title = `${state.name} — meloa_web`;
+  document.title = `${state.name} — Meloa WebEditor`;
   updateZoom(); tickPosition();
 }
 function renderFiles() {
@@ -250,7 +250,7 @@ function download(data, name, type) {
   const url = URL.createObjectURL(new Blob([data], { type })), a = document.createElement('a');
   a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
-const safeName = () => state.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'meloa_web';
+const safeName = () => state.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'Meloa WebEditor';
 async function saveSession() {
   status('音源を含むセッションを準備しています…'); await new Promise(resolve => setTimeout(resolve, 0));
   const data = { version: 1, format: 'meloa-web', name: state.name, master_db: state.master_db, tracks: state.tracks.map(t => ({ name: t.name, path: t.path, settings: t.settings, audio: toBase64(t.raw) })) };
@@ -310,7 +310,7 @@ const actions = {
   stop: () => { engine.pause(); engine.position = 0; tickPosition(); }, start: () => seek(0), end: () => seek(sessionDuration(state.tracks)),
   fit, 'zoom-in': () => { state.span = Math.max(.5, state.span / 1.5); updateZoom(); renderWorkspace(); }, 'zoom-out': () => { state.span = Math.min(2400, state.span * 1.5); updateZoom(); renderWorkspace(); },
   'pitch-info': () => { state.view = 'tune'; render(); },
-  help: () => info('meloa_web', '<p>音源を読み込み、音量・パン・M（ミュート）・S（ソロ）を調整します。クリップは左右にドラッグして開始位置を変更、ダブルクリックで波形を表示します。空のレーンや時間目盛りをクリックすると再生位置が変わります。</p><p>エフェクトは「適用」で反映。「保存」は音源を含むセッション、「WAV書き出し」は48 kHz / 24 bitのステレオ音声を保存します。編集は端末内に自動保存されます。</p><p>Space: 再生／一時停止 · Home/End: 先頭／末尾<br>9/0: 波形／マルチトラック · −/=: ズーム · \\: 全体表示<br>Ctrl+I/O/S: 読み込み／開く／保存 · Ctrl+Z: 取り消し</p><p>最大12トラック、1本10分、合計20分。形式対応はブラウザーに依存します。VST3・録音は未対応です。ピッチ／タイミングタブでは、ノートを上下にドラッグして音程、左右で発音位置、両端で長さを調整できます。キー8で開きます。デスクトップ版の全機能との互換性はありません。</p><p>初回読み込み完了後はオフラインでも利用できます。対応ブラウザーではアドレスバーからアプリとしてインストールできます。iPhone/iPadではSafariの共有 →「ホーム画面に追加」を使います。</p>')
+  help: () => info('Meloa WebEditor', '<p>音源を読み込み、音量・パン・M（ミュート）・S（ソロ）を調整します。クリップは左右にドラッグして開始位置を変更、ダブルクリックで波形を表示します。空のレーンや時間目盛りをクリックすると再生位置が変わります。</p><p>エフェクトは「適用」で反映。「保存」は音源を含むセッション、「WAV書き出し」は48 kHz / 24 bitのステレオ音声を保存します。編集は端末内に自動保存されます。</p><p>Space: 再生／一時停止 · Home/End: 先頭／末尾<br>9/0: 波形／マルチトラック · −/=: ズーム · \\: 全体表示<br>Ctrl+I/O/S: 読み込み／開く／保存 · Ctrl+Z: 取り消し</p><p>最大12トラック、1本10分、合計20分。形式対応はブラウザーに依存します。VST3・録音は未対応です。ピッチ／タイミングタブでは、ノートを上下にドラッグして音程、左右で発音位置、両端で長さを調整できます。キー8で開きます。デスクトップ版の全機能との互換性はありません。</p><p>初回読み込み完了後はオフラインでも利用できます。対応ブラウザーではアドレスバーからアプリとしてインストールできます。iPhone/iPadではSafariの共有 →「ホーム画面に追加」を使います。</p>')
 };
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]');
@@ -409,7 +409,7 @@ window.addEventListener('appinstalled', () => { $('#install').hidden = true; });
 const network = () => $('#network').textContent = navigator.onLine ? 'ローカル処理' : 'オフライン';
 window.addEventListener('online', network); window.addEventListener('offline', network); network();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register(new URL('./sw.js', import.meta.url)).then(registration => {
-  registration.addEventListener('updatefound', () => { const worker = registration.installing; worker.addEventListener('statechange', () => { if (worker.state === 'installed' && navigator.serviceWorker.controller) status('新しいバージョンがあります。すべてのmeloa_webタブを閉じてから、開き直してください。'); }); });
+  registration.addEventListener('updatefound', () => { const worker = registration.installing; worker.addEventListener('statechange', () => { if (worker.state === 'installed' && navigator.serviceWorker.controller) status('新しいバージョンがあります。すべてのMeloa WebEditorタブを閉じてから、開き直してください。'); }); });
 }).catch(error => status(`オフライン準備に失敗しました: ${error.message}`, true));
 render(); resetHistory('新規セッション'); requestAnimationFrame(animate);
 const startup = (async () => {

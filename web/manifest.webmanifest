@@ -1,6 +1,6 @@
 {
-  "name": "meloa_web",
-  "short_name": "meloa_web",
+  "name": "Meloa WebEditor",
+  "short_name": "Meloa WebEditor",
   "description": "音源を端末内で処理するマルチトラックMIXアプリ",
   "lang": "ja",
   "start_url": "./",

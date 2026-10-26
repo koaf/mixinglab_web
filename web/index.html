@@ -4,35 +4,53 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#151a18">
-  <meta name="description" content="meloa_web — 音源を読み込んで、その場でMIX。スマホにもPCにも、あなただけの小さなミキシングルーム。">
+  <meta name="description" content="Meloa WebEditor — 音源を読み込んで、その場でMIX。スマホにもPCにも、あなただけの小さなミキシングルーム。">
+  <link rel="canonical" href="https://meloa.wbsk.me/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Meloa WebEditor">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:title" content="Meloa WebEditor — いつものMIXを、ブラウザーから。">
+  <meta property="og:description" content="音源を読み込んで、その場でMIX。ピッチ・タイミングの調整からWAV書き出しまで。PCでもスマホでも使える、小さなミキシングルーム。">
+  <meta property="og:url" content="https://meloa.wbsk.me/">
+  <meta property="og:image" content="https://meloa.wbsk.me/ogp-home.png">
+  <meta property="og:image:secure_url" content="https://meloa.wbsk.me/ogp-home.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Meloa WebEditor — いつものMIXを、ブラウザーから。ミキサーの編集画面。">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Meloa WebEditor — いつものMIXを、ブラウザーから。">
+  <meta name="twitter:description" content="ピッチ・タイミングの調整からWAV書き出しまで。PCでもスマホでも使えるミキシングルーム。">
+  <meta name="twitter:image" content="https://meloa.wbsk.me/ogp-home.png">
+  <meta name="twitter:image:alt" content="Meloa WebEditorの紹介とミキサーの編集画面。">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon-256.png">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <script src="./entry.js"></script>
   <link rel="stylesheet" href="./welcome.css">
-  <title>meloa_web — いつものMIXを、ブラウザーから。</title>
+  <title>Meloa WebEditor — いつものMIXを、ブラウザーから。</title>
 </head>
 <body>
-  <header class="site-header"><a class="brand" href="./?welcome=1"><img src="./icons/icon-256.png" alt="">meloa_web</a><span class="header-note">YOUR LITTLE MIXING ROOM</span><a class="header-link" href="./mixer.html">アプリを開く <span>↗</span></a></header>
+  <header class="site-header"><a class="brand" href="./?welcome=1"><img src="./icons/icon-256.png" alt="">Meloa WebEditor</a><span class="header-note">YOUR LITTLE MIXING ROOM</span><a class="header-link" href="./mixer.html">アプリを開く <span>↗</span></a></header>
   <main>
     <section class="hero">
-      <div class="hero-copy"><div class="eyebrow"><span></span>音源を読み込んで、その場でMIX。</div><h1>いつものMIXを、<br><em>ブラウザーから。</em></h1><p class="intro">音を重ねる。バランスを整える。<br>思い描いた響きを、ひとつの音源に。<br>meloa_webは、あなたの小さなミキシングルームです。</p>
+      <div class="hero-copy"><div class="eyebrow"><span></span>音源を読み込んで、その場でMIX。</div><h1>いつものMIXを、<br><em>ブラウザーから。</em></h1><p class="intro">音を重ねる。バランスを整える。<br>思い描いた響きを、ひとつの音源に。<br>Meloa WebEditorは、あなたの小さなミキシングルームです。</p>
         <div class="install-card" id="install-card">
           <div class="install-heading"><span class="install-icon">＋</span><div><h2>スマホには、アプリとして。</h2><p>ホーム画面から、すぐにMIXを始められます。</p></div></div>
-          <button id="install-button" hidden>meloa_web をインストール <span>↓</span></button>
-          <div id="install-instructions"><ol id="install-steps"><li>ブラウザーのメニューを開く</li><li>「アプリをインストール」または<br>「ホーム画面に追加」を選ぶ</li><li>ホーム画面のmeloa_webを開く</li></ol></div>
+          <button id="install-button" hidden>Meloa WebEditor をインストール <span>↓</span></button>
+          <div id="install-instructions"><ol id="install-steps"><li>ブラウザーのメニューを開く</li><li>「アプリをインストール」または<br>「ホーム画面に追加」を選ぶ</li><li>ホーム画面のMeloa WebEditorを開く</li></ol></div>
           <p id="install-status" role="status" aria-live="polite">インストールは無料。アカウントも不要です。</p>
           <a href="./mixer.html" class="try-link">まずはブラウザーで使ってみる <span>→</span></a>
         </div>
         <a href="./mixer.html" class="desktop-cta" id="desktop-cta" hidden>ブラウザーでMIXを始める <span>→</span></a>
         <div class="privacy-note"><span>◈</span>音源は端末内で処理。サーバーへのアップロードはありません。</div>
       </div>
-      <div class="app-preview"><div class="preview-top"><span class="preview-dots">● ● ●</span><span>meloa_web / First mix</span><span>48 kHz</span></div><img src="./preview.png" alt="ファイル、エフェクトラック、色分けした3トラックを並べたmeloa_webの編集画面" width="1494" height="978"><div class="preview-caption"><span class="live-dot"></span>おなじみのワークスペースを、どこでも。</div></div>
+      <div class="app-preview"><div class="preview-top"><span class="preview-dots">● ● ●</span><span>Meloa WebEditor / First mix</span><span>48 kHz</span></div><img src="./preview.png" alt="ファイル、エフェクトラック、色分けした3トラックを並べたMeloa WebEditorの編集画面" width="1494" height="978"><div class="preview-caption"><span class="live-dot"></span>おなじみのワークスペースを、どこでも。</div></div>
     </section>
     <section class="workflow" aria-label="できること"><div class="section-label">FROM TRACKS TO YOUR MIX</div><div class="steps"><article><span class="step-number">01 / IMPORT</span><h2>音源を、並べる。</h2><p>WAV・MP3・FLAC・OGGを読み込み。最大12トラックを重ねて、クリップの位置を調整。</p></article><article><span class="step-number">02 / SHAPE</span><h2>響きを、つくる。</h2><p>音量とパンを整えて、EQやリバーブをプラス。ピッチシフターに加え、ノートごとの音程や発音位置も編集できます。</p></article><article><span class="step-number">03 / EXPORT</span><h2>ひとつの音に。</h2><p>48 kHz / 24 bitのステレオWAVに書き出し。音源を含むセッション保存で、続きはまた後で。</p></article></div></section>
     <section class="offline-note"><div><span class="eyebrow">READY WHEN YOU ARE</span><h2>つながっていなくても、<br class="mobile-break">音づくりは続けられる。</h2></div><p>最初の読み込みが完了すれば、オフラインでも起動。<br>作業は端末内に自動保存されます。大切なMIXは、セッションファイルでも保存してください。</p></section>
   </main>
-  <footer><a class="brand" href="./?welcome=1"><img src="./icons/icon-256.png" alt="">meloa_web</a><span>MAKE ROOM FOR YOUR SOUND.</span><a href="https://github.com/koaf/mixinglab_web">GitHub ↗</a></footer>
+  <footer><a class="brand" href="./?welcome=1"><img src="./icons/icon-256.png" alt="">Meloa WebEditor</a><span>MAKE ROOM FOR YOUR SOUND.</span><a href="https://github.com/koaf/mixinglab_web">GitHub ↗</a></footer>
   <script type="module" src="./welcome.js"></script>
 </body>
 </html>

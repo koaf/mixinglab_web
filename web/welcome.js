@@ -21,7 +21,7 @@ $('#install-button').addEventListener('click', async () => {
 });
 window.addEventListener('appinstalled', () => {
   $('#install-button').hidden = true; $('#install-instructions').hidden = true;
-  $('#install-status').textContent = 'インストールできました。ホーム画面からmeloa_webを開いてください。';
+  $('#install-status').textContent = 'インストールできました。ホーム画面からMeloa WebEditorを開いてください。';
 });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register(new URL('./sw.js', import.meta.url)).catch(() => {
   $('#install-status').textContent = 'オフラインの準備ができませんでした。接続を確認して再読み込みしてください。';
