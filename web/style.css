@@ -99,13 +99,6 @@ input[type=checkbox]{
   width:18px;
   height:18px
 }
-.titlebar>span:first-of-type{
-  font-size:10px;
-  color:#999;
-  border:1px solid #555;
-  border-radius:3px;
-  padding:0 4px
-}
 #network{
   font-size:11px;
   color:#999
@@ -992,3 +985,5 @@ input[type=range]:not(.fader)::-moz-range-thumb{
     gap:4px
   }
 }
+.formant-option{display:flex;align-items:center;gap:5px;font-size:11px;line-height:1.8;padding:8px 0}
+.formant-option input{flex-shrink:0}

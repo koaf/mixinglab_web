@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#232323">
+  <meta name="description" content="meloa_web — ブラウザーで使えるマルチトラックMIXアプリ。音源は端末内で処理します。">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon-256.png">
+  <link rel="apple-touch-icon" href="./icons/icon-256.png">
+  <link rel="stylesheet" href="./style.css">
+  <title>meloa_web</title>
+</head>
+<body>
+  <header>
+    <div class="titlebar"><a href="./?welcome=1" aria-label="トップページ"><img src="./icons/icon-256.png" alt=""></a> meloa_web<span class="spacer"></span><span id="network">ローカル処理</span><button id="install" hidden>アプリをインストール</button></div>
+    <nav aria-label="メニュー">
+      <details><summary>ファイル</summary><div class="menu"><button data-action="import">音源を読み込み… <kbd>Ctrl+I</kbd></button><button data-action="open">セッションを開く… <kbd>Ctrl+O</kbd></button><button data-action="save">名前を付けて保存… <kbd>Ctrl+S</kbd></button><hr><button data-action="demo">デモセッションを開く</button><button data-action="export">ミックスダウンを書き出し…</button><hr><button data-action="new">新規セッション</button></div></details>
+      <details><summary>編集</summary><div class="menu"><button data-action="undo">取り消し <kbd>Ctrl+Z</kbd></button><button data-action="redo">やり直し <kbd>Ctrl+Shift+Z</kbd></button><button data-action="delete">選択トラックを削除</button></div></details>
+      <details><summary>マルチトラック</summary><div class="menu"><button data-action="multitrack">マルチトラックエディター</button><button data-action="mixer">ミキサー</button></div></details>
+      <details><summary>クリップ</summary><div class="menu"><button data-action="waveform">波形エディターで開く</button><button data-action="reset-offset">開始位置を先頭に戻す</button></div></details>
+      <details><summary>エフェクト</summary><div class="menu"><button data-action="rack">エフェクトラックを表示</button><button data-action="bypass">ラックをバイパス / 有効化</button></div></details>
+      <details><summary>表示</summary><div class="menu"><button data-action="waveform">波形エディター <kbd>9</kbd></button><button data-action="multitrack">マルチトラック <kbd>0</kbd></button><button data-action="fit">全体表示 <kbd>\</kbd></button></div></details>
+      <button data-action="help" class="plain">ヘルプ</button>
+    </nav>
+    <div class="toolbar"><button data-action="waveform" id="mode-wave">▥ 波形</button><button data-action="multitrack" id="mode-multi" class="active">☷ マルチトラック</button><span class="divider"></span><span class="pointer">↖</span><span class="spacer"></span><button data-action="export">↓ WAV書き出し</button></div>
+  </header>
+  <main>
+    <aside>
+      <section class="panel files-panel" tabindex="0" aria-label="ファイル">
+        <div class="tabs"><span class="tab active">ファイル</span><span class="tab muted">メディア</span></div>
+        <div class="file-actions"><button data-action="import">読み込み…</button><button data-action="open">セッションを開く…</button><button data-action="save">保存</button></div>
+        <div class="file-heading"><span>名前</span><span>長さ</span><span>チャンネル</span></div><div id="files"></div>
+        <div id="file-empty" class="hint">WAV / MP3 / FLAC / OGG<br>音源をドラッグ＆ドロップ</div>
+      </section>
+      <section class="panel rack-panel" tabindex="0" aria-label="エフェクトラック">
+        <div class="tabs" id="side-tabs"><button data-side="rack" class="tab active">エフェクトラック</button><button data-side="properties" class="tab">プロパティ</button><button data-side="history" class="tab">履歴</button></div>
+        <div id="side-content"></div>
+      </section>
+    </aside>
+    <section class="panel editor" tabindex="0" aria-label="エディター">
+      <div class="tabs"><button data-action="multitrack" id="editor-tab" class="tab active">エディター: 無題</button><button data-action="mixer" id="mixer-tab" class="tab">ミキサー</button><button data-action="pitch-info" class="tab muted" title="Web版の対応状況">ピッチ / タイミング</button></div>
+      <div id="workspace"></div>
+      <div class="transport"><button data-action="start" title="先頭 (Home)" aria-label="先頭">|◀</button><button data-action="stop" title="停止" aria-label="停止">■</button><button data-action="play" id="play" title="再生・一時停止 (Space)" aria-label="再生">▶</button><button data-action="end" title="末尾 (End)" aria-label="末尾">▶|</button><output id="clock">0:00.000</output><span class="spacer"></span><button data-action="zoom-out" aria-label="ズームアウト">−</button><input id="zoom" aria-label="表示範囲（秒）" type="range" min="2" max="120" value="20"><button data-action="zoom-in" aria-label="ズームイン">＋</button><button data-action="fit">全体表示</button></div>
+    </section>
+  </main>
+  <div class="bottom-dock"><section class="panel meters"><div class="panel-label">レベルメーター</div><div class="meter-row"><span>L</span><div class="meter"><i id="meter-l"></i></div><button id="clip" title="クリックでクリップ表示をリセット">CLIP</button></div><div class="meter-row"><span>R</span><div class="meter"><i id="meter-r"></i></div><span class="meter-unit">dB</span></div><div class="meter-scale"><span>−60</span><span>−48</span><span>−36</span><span>−24</span><span>−12</span><span>0</span></div></section><section class="panel selection"><div class="panel-label">選択 / 表示</div><div><span>現在位置</span><output id="position">0:00.000</output></div><div><span>セッション長</span><output id="duration">0:00.000</output></div><div><span>出力</span><span>48,000 Hz · ステレオ</span></div></section></div>
+  <footer><span id="status" role="status" aria-live="polite">準備完了 — 音源を読み込むか、デモセッションを開いてください。</span><span>Web Audio · 音源は端末内で処理</span></footer>
+  <input type="file" id="audio-input" accept="audio/*,.wav,.mp3,.flac,.ogg" multiple hidden>
+  <input type="file" id="session-input" accept=".json,.meloa.json,.mixroom.json" hidden>
+  <dialog id="dialog"><form method="dialog"><h2 id="dialog-title"></h2><div id="dialog-body"></div><div class="dialog-actions"><button value="cancel">閉じる</button><button id="dialog-confirm" value="confirm" hidden>続行</button></div></form></dialog>
+  <div id="drop-overlay" hidden>音源をドロップして読み込み</div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,8 +1,9 @@
-export const DEFAULT_FX = Object.freeze({ bypass: false, low_db: 0, mid_db: 0, high_db: 0, mid_hz: 1000, mid_q: .7, threshold_db: -18, ratio: 1, attack_ms: 12, release_ms: 120, makeup_db: 0, reverb: 0, delay: 0, delay_ms: 250 });
+import { preparePitchTracks, playbackBuffer } from './pitch.js';
+export const DEFAULT_FX = Object.freeze({ bypass: false, low_db: 0, mid_db: 0, high_db: 0, mid_hz: 1000, mid_q: .7, threshold_db: -18, ratio: 1, attack_ms: 12, release_ms: 120, makeup_db: 0, reverb: 0, delay: 0, delay_ms: 250, pitch: 0, formant: true });
 export const DEFAULT_SETTINGS = Object.freeze({ gain_db: 0, pan: 0, mute: false, solo: false, offset: 0 });
 export const LIMITS = { tracks: 12, duration: 600, total: 1200, bytes: 120 * 1024 * 1024 };
 export const FX_RANGES = {
-  low_db: [-24, 24], mid_db: [-24, 24], high_db: [-24, 24], mid_hz: [80, 12000], mid_q: [.1, 10], threshold_db: [-60, 0], ratio: [1, 20], attack_ms: [1, 100], release_ms: [10, 1000], makeup_db: [0, 24], reverb: [0, 1], delay: [0, 1], delay_ms: [20, 1000]
+  low_db: [-24, 24], mid_db: [-24, 24], high_db: [-24, 24], mid_hz: [80, 12000], mid_q: [.1, 10], threshold_db: [-60, 0], ratio: [1, 20], attack_ms: [1, 100], release_ms: [10, 1000], makeup_db: [0, 24], reverb: [0, 1], delay: [0, 1], delay_ms: [20, 1000], pitch: [-12, 12]
 };
 export const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 export const dbGain = db => 10 ** (db / 20);
@@ -11,7 +12,7 @@ export function normalizeSettings(settings = {}) {
   const fx = settings.fx || {};
   return {
     gain_db: number(settings.gain_db, 0, -60, 12), pan: number(settings.pan, 0, -1, 1), mute: !!settings.mute, solo: !!settings.solo, offset: number(settings.offset, 0, 0, 1200),
-    fx: Object.fromEntries(Object.entries(DEFAULT_FX).map(([key, value]) => [key, key === 'bypass' ? !!fx.bypass : number(fx[key], value, ...FX_RANGES[key])]))
+    fx: Object.fromEntries(Object.entries(DEFAULT_FX).map(([key, value]) => [key, typeof value === 'boolean' ? typeof fx[key] === 'boolean' ? fx[key] : value : number(fx[key], value, ...FX_RANGES[key])]))
   };
 }
 export function validateSession(data) {
@@ -60,7 +61,7 @@ function makeImpulse(context) {
 }
 const impulses = new WeakMap();
 export function trackGraph(context, track, tracks, destination, position, when) {
-  const source = context.createBufferSource(); source.buffer = track.buffer;
+  const source = context.createBufferSource(); source.buffer = playbackBuffer(track);
   const nodes = [source]; let last = source;
   const chain = node => { last.connect(node); nodes.push(node); last = node; return node; };
   const fx = track.settings.fx;
@@ -112,6 +113,7 @@ export class AudioEngine {
   async play(tracks) {
     await this.init(true);
     this.pause();
+    await preparePitchTracks(tracks, this.context);
     this.master.gain.value = dbGain(this.masterDb);
     this.startedAt = this.context.currentTime + .03;
     this.graphs = tracks.map(t => ({ track: t, ...trackGraph(this.context, t, tracks, this.master, this.position, this.startedAt) }));

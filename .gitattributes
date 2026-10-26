@@ -1,0 +1,10 @@
+# Keep sources LF everywhere so commits do not churn line endings on Windows.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.wav binary
+*.flac binary
+*.mp3 binary
+*.ogg binary
+*.png binary
+*.ico binary
+*.wasm binary

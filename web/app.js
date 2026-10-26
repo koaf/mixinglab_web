@@ -1,5 +1,6 @@
 import { AudioEngine, DEFAULT_FX, LIMITS, clamp, normalizeSettings, validateSession, audible, sessionDuration, tailDuration, formatTime, dbGain, encodeWav, trackGraph } from './audio.js';
 import { readAutosave, writeAutosave } from './storage.js';
+import { preparePitchTracks } from './pitch.js';
 
 const $ = selector => document.querySelector(selector);
 const engine = new AudioEngine();
@@ -62,7 +63,7 @@ function render() {
   $('#editor-tab').classList.toggle('active', state.view !== 'mixer'); $('#mixer-tab').classList.toggle('active', state.view === 'mixer');
   $('#editor-tab').textContent = `エディター: ${state.name}`;
   $('#duration').textContent = formatTime(sessionDuration(state.tracks));
-  document.title = `${state.name} — Meloa Web`;
+  document.title = `${state.name} — meloa_web`;
   updateZoom(); tickPosition();
 }
 function renderFiles() {
@@ -72,7 +73,8 @@ function renderFiles() {
 const fxGroups = [
   ['パラメトリック EQ', [['low_db', 'Low', -24, 24, .1, 'dB'], ['mid_db', 'Mid', -24, 24, .1, 'dB'], ['mid_hz', '周波数', 80, 12000, 10, 'Hz'], ['mid_q', 'Q', .1, 10, .1, ''], ['high_db', 'High', -24, 24, .1, 'dB']]],
   ['ダイナミクス (コンプレッサー)', [['threshold_db', 'スレッショルド', -60, 0, .1, 'dB'], ['ratio', 'レシオ', 1, 20, .1, ':1'], ['attack_ms', 'アタック', 1, 100, 1, 'ms'], ['release_ms', 'リリース', 10, 1000, 1, 'ms'], ['makeup_db', 'メイクアップ', 0, 24, .1, 'dB']]],
-  ['リバーブ / ディレイ', [['reverb', 'リバーブ', 0, 1, .01, '%'], ['delay', 'ディレイ', 0, 1, .01, '%'], ['delay_ms', 'ディレイ時間', 20, 1000, 1, 'ms']]]
+  ['リバーブ / ディレイ', [['reverb', 'リバーブ', 0, 1, .01, '%'], ['delay', 'ディレイ', 0, 1, .01, '%'], ['delay_ms', 'ディレイ時間', 20, 1000, 1, 'ms']]],
+  ['ピッチシフター', [['pitch', 'ピッチ', -12, 12, .1, '半音']]]
 ];
 const fxLabel = (value, unit) => unit === '%' ? `${Math.round(value * 100)} %` : `${unit === 'Hz' || unit === 'ms' ? Math.round(value) : value.toFixed(1)}${unit === ':1' ? ':1' : ' ' + unit}`;
 function renderSide() {
@@ -85,7 +87,7 @@ function renderSide() {
   if (state.side === 'properties') {
     body.innerHTML = `<label class="property">セッション名<input type="text" id="session-name" value="${escape(state.name)}" maxlength="160"></label><div class="rack-title" style="--track:${trackColor(t)}">${escape(t.name)}</div><label class="property">トラック名<input type="text" id="track-name" value="${escape(t.name)}" maxlength="160"></label><label class="property">開始位置（秒）<input type="number" id="track-offset" value="${t.settings.offset.toFixed(3)}" min="0" max="1200" step=".01"></label><p>長さ: ${formatTime(t.buffer.duration)}</p><p>${t.buffer.sampleRate.toLocaleString()} Hz / ${t.buffer.numberOfChannels} ch</p><p class="side-note">元ファイル: ${escape(t.path)}</p><button data-action="delete" class="danger">トラックを削除</button>`; return;
   }
-  body.innerHTML = `<div class="fx-top"><span>トラックエフェクト</span><span class="spacer"></span><label><input id="fx-bypass" type="checkbox" ${t.settings.fx.bypass ? 'checked' : ''}>バイパス</label></div><div class="rack-title" style="--track:${trackColor(t)}">トラック: ${escape(t.name)}</div><p class="side-note">内蔵エフェクト（「適用」で再生に反映）</p>${fxGroups.map(([title, fields], i) => `<details class="fx-group" open><summary>${i + 1} ⏻ ${title}</summary><div class="fx-fields">${fields.map(([key, label, min, max, step, unit]) => `<label class="field"><span>${label}</span><input type="range" data-fx="${key}" data-unit="${unit}" min="${min}" max="${max}" step="${step}" value="${t.settings.fx[key]}" aria-label="${label}"><output>${fxLabel(t.settings.fx[key], unit)}</output></label>`).join('')}</div></details>`).join('')}<button data-action="apply-fx" class="primary">適用</button><button data-action="reset-fx">初期値に戻す</button><p class="side-note">VST3・ピッチ／タイミング補正はWeb版では未対応です。EQ・コンプレッサー・リバーブ・ディレイは再生と書き出しに適用します。</p>`;
+  body.innerHTML = `<div class="fx-top"><span>トラックエフェクト</span><span class="spacer"></span><label><input id="fx-bypass" type="checkbox" ${t.settings.fx.bypass ? 'checked' : ''}>バイパス</label></div><div class="rack-title" style="--track:${trackColor(t)}">トラック: ${escape(t.name)}</div><p class="side-note">内蔵エフェクト（「適用」で再生に反映）</p>${fxGroups.map(([title, fields], i) => `<details class="fx-group" open><summary>${i + 1} ⏻ ${title}</summary><div class="fx-fields">${fields.map(([key, label, min, max, step, unit]) => `<label class="field"><span>${label}</span><input type="range" data-fx="${key}" data-unit="${unit}" min="${min}" max="${max}" step="${step}" value="${t.settings.fx[key]}" aria-label="${label}"><output>${fxLabel(t.settings.fx[key], unit)}</output></label>`).join('')}${i === 3 ? `<label class="formant-option"><input id="fx-formant" type="checkbox" ${t.settings.fx.formant ? 'checked' : ''}>フォルマントを保持 (声質を変えない)</label>` : ''}</div></details>`).join('')}<button data-action="apply-fx" class="primary">適用</button><button data-action="reset-fx">初期値に戻す</button><p class="side-note">VST3・ノート単位のピッチ／タイミング補正はWeb版では未対応です。EQ・コンプレッサー・リバーブ・ディレイ・ピッチシフターは再生と書き出しに適用します。ピッチは長さを保ったまま±12半音。デスクトップ版と同じフォルマント保持にも対応します。</p>`;
 }
 function controls(t) {
   return `<div class="track-buttons"><button data-toggle="mute" data-track="${t.id}" class="chip ${t.settings.mute ? 'muted-on' : ''}" aria-label="${escape(t.name)} ミュート" aria-pressed="${t.settings.mute}">M</button><button data-toggle="solo" data-track="${t.id}" class="chip ${t.settings.solo ? 'solo-on' : ''}" aria-label="${escape(t.name)} ソロ" aria-pressed="${t.settings.solo}">S</button><button data-rack="${t.id}" class="chip">fx</button></div>`;
@@ -213,13 +215,13 @@ async function loadSession(data, { demo = false, restoring = false } = {}) {
     tracks.push(await decodeTrack(raw, item.name, basename(item.path || item.name), item.settings));
   }
   checkTracks(tracks);
-  const unsupported = data.master_inserts?.length || data.tracks.some(t => t.settings?.fx?.pitch || t.settings?.tune || t.tune || t.plugins?.length || t.inserts?.length);
+  const unsupported = data.master_inserts?.length || data.tracks.some(t => t.settings?.tune || t.tune || t.plugins?.length || t.inserts?.length);
   engine.pause(); engine.position = 0;
   state.name = session.name; state.master_db = session.master_db; state.tracks = tracks; state.selected = tracks[0]?.id || null;
   state.view = 'multitrack'; engine.update(tracks, state.master_db); stagedSession = null;
   fit(); resetHistory(restoring ? '自動保存から復元' : 'セッションを開く'); render(); await flushAutosave();
   status(`${restoring ? '自動保存から復元しました' : 'セッションを開きました'}: ${state.name}`);
-  if (unsupported) await info('Web版の対応範囲', '<p>このセッションに含まれるVST3・ピッチ／タイミング補正は再現できません。Web版で保存したファイルには、これらの設定を含みません。元のセッションは保管してください。</p>');
+  if (unsupported) await info('Web版の対応範囲', '<p>このセッションに含まれるVST3・ノート単位のピッチ／タイミング補正は再現できません。Web版で保存したファイルには、これらの設定を含みません。元のセッションは保管してください。</p>');
 }
 async function finishStaged() {
   const missing = stagedSession.data.tracks.filter(t => !t.audio && !stagedSession.files.has(basename(t.path))).map(t => basename(t.path));
@@ -241,7 +243,7 @@ function download(data, name, type) {
   const url = URL.createObjectURL(new Blob([data], { type })), a = document.createElement('a');
   a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
-const safeName = () => state.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'Meloa';
+const safeName = () => state.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'meloa_web';
 async function saveSession() {
   status('音源を含むセッションを準備しています…'); await new Promise(resolve => setTimeout(resolve, 0));
   const data = { version: 1, format: 'meloa-web', name: state.name, master_db: state.master_db, tracks: state.tracks.map(t => ({ name: t.name, path: t.path, settings: t.settings, audio: toBase64(t.raw) })) };
@@ -255,6 +257,7 @@ async function exportMix() {
   engine.pause(); status('ミックスダウンを書き出しています…');
   const seconds = sessionDuration(state.tracks) + tailDuration(state.tracks), frames = Math.ceil(seconds * 48000);
   const context = new OfflineAudioContext(2, frames, 48000), master = context.createGain(); master.gain.value = dbGain(state.master_db); master.connect(context.destination);
+  await preparePitchTracks(state.tracks, context);
   for (const t of state.tracks) if (audible(t, state.tracks)) trackGraph(context, t, state.tracks, master, 0, 0);
   const buffer = await context.startRendering();
   download(encodeWav(buffer), `${safeName()}.wav`, 'audio/wav'); status('48 kHz / 24 bit ステレオWAVを書き出しました。');
@@ -273,14 +276,22 @@ const actions = {
   waveform: () => { state.view = 'waveform'; render(); }, multitrack: () => { state.view = 'multitrack'; render(); }, mixer: () => { state.view = 'mixer'; render(); },
   rack: () => { state.side = 'rack'; renderSide(); },
   bypass: async () => { const t = selected(); if (!t) return; t.settings.fx.bypass = !t.settings.fx.bypass; record('ラックのバイパスを変更'); renderSide(); await restart(); },
-  'apply-fx': async () => { const t = selected(); if (!t || state.side !== 'rack') return; const fx = { ...t.settings.fx, bypass: $('#fx-bypass').checked }; document.querySelectorAll('[data-fx]').forEach(el => fx[el.dataset.fx] = Number(el.value)); t.settings.fx = fx; record('エフェクトを適用'); await restart(); status('エフェクトを適用しました。'); },
+  'apply-fx': async () => {
+    const t = selected(); if (!t || state.side !== 'rack') return;
+    const fx = { ...t.settings.fx, bypass: $('#fx-bypass').checked, formant: $('#fx-formant').checked };
+    document.querySelectorAll('[data-fx]').forEach(el => fx[el.dataset.fx] = Number(el.value));
+    const candidate = { ...t, settings: { ...t.settings, fx } };
+    status('エフェクトを準備しています。ピッチ処理中は少しお待ちください…');
+    await preparePitchTracks([candidate], await engine.init());
+    t.settings.fx = fx; record('エフェクトを適用'); await restart(); status('エフェクトを適用しました。');
+  },
   'reset-fx': async () => { const t = selected(); if (!t) return; t.settings.fx = { ...DEFAULT_FX }; record('エフェクトを初期化'); renderSide(); await restart(); },
   'reset-offset': async () => { const t = selected(); if (!t) return; t.settings.offset = 0; record('クリップを先頭へ移動'); render(); await restart(); },
   play: async () => { if (engine.playing) engine.pause(); else if (state.tracks.length) { if (engine.position >= sessionDuration(state.tracks)) engine.position = 0; engine.update(state.tracks, state.master_db); await engine.play(state.tracks); } },
   stop: () => { engine.pause(); engine.position = 0; tickPosition(); }, start: () => seek(0), end: () => seek(sessionDuration(state.tracks)),
   fit, 'zoom-in': () => { state.span = Math.max(.5, state.span / 1.5); updateZoom(); renderWorkspace(); }, 'zoom-out': () => { state.span = Math.min(2400, state.span * 1.5); updateZoom(); renderWorkspace(); },
-  'pitch-info': () => info('ピッチ / タイミング', '<p>Web版ではピッチ解析・補正、タイミング補正には未対応です。デスクトップ版では引き続き利用できます。</p>'),
-  help: () => info('Meloa Web', '<p>音源を読み込み、音量・パン・M（ミュート）・S（ソロ）を調整します。クリップは左右にドラッグして開始位置を変更、ダブルクリックで波形を表示します。空のレーンや時間目盛りをクリックすると再生位置が変わります。</p><p>エフェクトは「適用」で反映。「保存」は音源を含むセッション、「WAV書き出し」は48 kHz / 24 bitのステレオ音声を保存します。編集は端末内に自動保存されます。</p><p>Space: 再生／一時停止 · Home/End: 先頭／末尾<br>9/0: 波形／マルチトラック · −/=: ズーム · \\: 全体表示<br>Ctrl+I/O/S: 読み込み／開く／保存 · Ctrl+Z: 取り消し</p><p>最大12トラック、1本10分、合計20分。形式対応はブラウザーに依存します。VST3・ピッチ／タイミング補正・録音は未対応です。デスクトップ版の全機能との互換性はありません。</p><p>初回読み込み完了後はオフラインでも利用できます。対応ブラウザーではアドレスバーからアプリとしてインストールできます。iPhone/iPadではSafariの共有 →「ホーム画面に追加」を使います。</p>')
+  'pitch-info': () => info('ピッチ / タイミング', '<p>全体のキー変更は、エフェクトラックの「ピッチシフター」で±12半音を調整できます。ノート単位のピッチ解析・補正、タイミング補正はWeb版では未対応です。</p>'),
+  help: () => info('meloa_web', '<p>音源を読み込み、音量・パン・M（ミュート）・S（ソロ）を調整します。クリップは左右にドラッグして開始位置を変更、ダブルクリックで波形を表示します。空のレーンや時間目盛りをクリックすると再生位置が変わります。</p><p>エフェクトは「適用」で反映。「保存」は音源を含むセッション、「WAV書き出し」は48 kHz / 24 bitのステレオ音声を保存します。編集は端末内に自動保存されます。</p><p>Space: 再生／一時停止 · Home/End: 先頭／末尾<br>9/0: 波形／マルチトラック · −/=: ズーム · \\: 全体表示<br>Ctrl+I/O/S: 読み込み／開く／保存 · Ctrl+Z: 取り消し</p><p>最大12トラック、1本10分、合計20分。形式対応はブラウザーに依存します。VST3・ノート単位のピッチ／タイミング補正・録音は未対応です。デスクトップ版の全機能との互換性はありません。</p><p>初回読み込み完了後はオフラインでも利用できます。対応ブラウザーではアドレスバーからアプリとしてインストールできます。iPhone/iPadではSafariの共有 →「ホーム画面に追加」を使います。</p>')
 };
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]');
@@ -378,7 +389,7 @@ window.addEventListener('appinstalled', () => { $('#install').hidden = true; });
 const network = () => $('#network').textContent = navigator.onLine ? 'ローカル処理' : 'オフライン';
 window.addEventListener('online', network); window.addEventListener('offline', network); network();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register(new URL('./sw.js', import.meta.url)).then(registration => {
-  registration.addEventListener('updatefound', () => { const worker = registration.installing; worker.addEventListener('statechange', () => { if (worker.state === 'installed' && navigator.serviceWorker.controller) status('新しいバージョンがあります。すべてのMeloaタブを閉じてから、開き直してください。'); }); });
+  registration.addEventListener('updatefound', () => { const worker = registration.installing; worker.addEventListener('statechange', () => { if (worker.state === 'installed' && navigator.serviceWorker.controller) status('新しいバージョンがあります。すべてのmeloa_webタブを閉じてから、開き直してください。'); }); });
 }).catch(error => status(`オフライン準備に失敗しました: ${error.message}`, true));
 render(); resetHistory('新規セッション'); requestAnimationFrame(animate);
 const startup = (async () => {

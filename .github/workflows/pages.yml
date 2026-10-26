@@ -1,4 +1,4 @@
-name: Deploy Meloa Web to GitHub Pages
+name: Deploy meloa_web to GitHub Pages
 on:
   push:
     branches: [main]

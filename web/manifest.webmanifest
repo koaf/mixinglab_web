@@ -1,6 +1,6 @@
 {
-  "name": "Meloa — マルチトラックMIX",
-  "short_name": "Meloa",
+  "name": "meloa_web",
+  "short_name": "meloa_web",
   "description": "音源を端末内で処理するマルチトラックMIXアプリ",
   "lang": "ja",
   "start_url": "./",
