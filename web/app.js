@@ -8,6 +8,8 @@ const $ = selector => document.querySelector(selector);
 const engine = new AudioEngine();
 const colors = ['#2eaa78', '#4688d6', '#9e68d2', '#d25c84', '#d88e3c', '#bab240', '#3aacba', '#cc5448'];
 const state = { name: '無題', tracks: [], master_db: 0, selected: null, view: 'multitrack', side: 'rack', span: 20 };
+let trackSerial = 0;
+const trackId = () => globalThis.crypto?.randomUUID?.() || `track-${Date.now().toString(36)}-${++trackSerial}`;
 let history = [], historyIndex = -1, busy = false, dirty = false, autosaveTimer, saveQueue = Promise.resolve(), stagedSession, installPrompt;
 const escape = value => String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 const selected = () => state.tracks.find(t => t.id === state.selected);
@@ -172,7 +174,7 @@ async function decodeTrack(raw, name, path, settings) {
   const context = await engine.init();
   let buffer; try { buffer = await context.decodeAudioData(raw.slice(0)); } catch { throw Error(`${name}: 音源を読み込めません。このブラウザーが対応するWAV / MP3 / FLAC / OGGを選んでください。`); }
   if (buffer.duration > LIMITS.duration || buffer.numberOfChannels > 2) throw Error(`${name}: 10分以内のモノラル／ステレオ音源を選んでください。`);
-  return { id: crypto.randomUUID(), name, path, raw, buffer, settings: normalizeSettings(settings) };
+  return { id: trackId(), name, path, raw, buffer, settings: normalizeSettings(settings) };
 }
 function checkTracks(tracks) {
   if (tracks.length > LIMITS.tracks) throw Error('最大12トラックまで読み込めます。');

@@ -1,5 +1,5 @@
 const PREFIX = `meloa-web-${new URL(self.registration.scope).pathname}-`;
-const CACHE = `${PREFIX}v6`;
+const CACHE = `${PREFIX}v7`;
 const ASSETS = ['./', './index.html', './mixer.html', './entry.js', './welcome.js', './welcome.css', './preview.png', './style.css', './app.js', './audio.js', './pitch.js', './pitch-worker.js', './pitch-dsp.js', './pitch.wasm', './tune.js', './tune-editor.js', './tune.css', './storage.js', './manifest.webmanifest', './icons/icon-256.png', './icons/icon-192.png', './icons/icon-512.png', './demo/first_mix.meloa.json', './demo/lead.wav', './demo/bass.wav', './demo/pad.wav'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));

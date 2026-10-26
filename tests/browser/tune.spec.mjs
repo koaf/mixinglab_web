@@ -36,6 +36,7 @@ test('pitch/timing tab analyzes, edits, saves, exports, restores and works offli
   expect(errors).toEqual([]);
 });
 test('note dragging changes pitch and timing; undo restores both',async({page})=>{
+  await page.addInitScript(()=>Object.defineProperty(Crypto.prototype,'randomUUID',{value:undefined}));
   await page.goto('/');await page.locator('#audio-input').setInputFiles({name:'vocal.wav',mimeType:'audio/wav',buffer:take()});await expect(page.locator('.file-row')).toHaveCount(1);await page.keyboard.press('8');
   const note=page.locator('.tune-note').first();await expect(note).toBeVisible();await note.scrollIntoViewIfNeeded();const box=await note.boundingBox();
   await page.mouse.move(box.x+box.width/2,box.y+10);await page.mouse.down();await page.mouse.move(box.x+box.width/2,box.y-10,{steps:5});await page.mouse.up();await expect(page.locator('#status')).toHaveText('ノートのピッチを変更');
