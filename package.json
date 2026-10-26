@@ -1,0 +1,13 @@
+{
+  "name": "meloa-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-web.mjs",
+    "dev": "node scripts/serve-web.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": { "@playwright/test": "^1.56.1" }
+}

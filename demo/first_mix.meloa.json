@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "name": "First mix",
+  "master_db": 0,
+  "tracks": [
+    {
+      "name": "Lead melody",
+      "path": "lead.wav",
+      "settings": {
+        "gain_db": -3,
+        "pan": 0,
+        "mute": false,
+        "solo": false,
+        "offset": 0,
+        "fx": {
+          "bypass": false,
+          "low_db": 0,
+          "mid_db": 0,
+          "high_db": 0,
+          "mid_hz": 1000,
+          "mid_q": 0.7,
+          "threshold_db": -18,
+          "ratio": 1,
+          "attack_ms": 12,
+          "release_ms": 120,
+          "makeup_db": 0,
+          "reverb": 0,
+          "delay": 0,
+          "delay_ms": 250,
+          "pitch": 0
+        }
+      }
+    },
+    {
+      "name": "Bass",
+      "path": "bass.wav",
+      "settings": {
+        "gain_db": -4,
+        "pan": 0,
+        "mute": false,
+        "solo": false,
+        "offset": 0,
+        "fx": {
+          "bypass": false,
+          "low_db": 0,
+          "mid_db": 0,
+          "high_db": 0,
+          "mid_hz": 1000,
+          "mid_q": 0.7,
+          "threshold_db": -18,
+          "ratio": 1,
+          "attack_ms": 12,
+          "release_ms": 120,
+          "makeup_db": 0,
+          "reverb": 0,
+          "delay": 0,
+          "delay_ms": 250,
+          "pitch": 0
+        }
+      }
+    },
+    {
+      "name": "Soft chords",
+      "path": "pad.wav",
+      "settings": {
+        "gain_db": -2,
+        "pan": -0.15,
+        "mute": false,
+        "solo": false,
+        "offset": 0,
+        "fx": {
+          "bypass": false,
+          "low_db": 0,
+          "mid_db": 0,
+          "high_db": 0,
+          "mid_hz": 1000,
+          "mid_q": 0.7,
+          "threshold_db": -18,
+          "ratio": 1,
+          "attack_ms": 12,
+          "release_ms": 120,
+          "makeup_db": 0,
+          "reverb": 0,
+          "delay": 0,
+          "delay_ms": 250,
+          "pitch": 0
+        }
+      }
+    }
+  ]
+}
