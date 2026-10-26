@@ -1,0 +1,228 @@
+.tune-view{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  min-height:280px;
+  background:#1c1c1c
+}
+.tune-title{
+  padding:8px 12px;
+  color:#ddd;
+  border-bottom:1px solid #111;
+  font-size:12px
+}
+.tune-title span{
+  color:#888;
+  font-size:11px;
+  margin-left:16px
+}
+.tune-toolbar{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:7px 10px;
+  flex-wrap:wrap;
+  border-bottom:1px solid #141414;
+  background:#232323;
+  font-size:11px;
+  flex-shrink:0
+}
+.tune-toolbar strong{
+  font-weight:500;
+  color:#ddd;
+  min-width:55px
+}
+.tune-toolbar label{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  color:#999
+}
+.tune-toolbar select{
+  background:#161616;
+  border:1px solid #444;
+  color:#ccc;
+  padding:4px;
+  border-radius:2px;
+  font-size:11px;
+  max-width:145px
+}
+.tune-toolbar input{
+  width:48px;
+  font-size:11px;
+  padding:3px
+}
+.tune-toolbar button{
+  font-size:11px
+}
+.tune-note-fields>span:first-child{
+  color:#9bcfff;
+  min-width:68px
+}
+.tune-note-fields input{
+  width:65px
+}
+.tune-shortcuts{
+  font-size:10px;
+  color:#777
+}
+.tune-scroll{
+  flex:1;
+  overflow:auto;
+  min-height:90px;
+  position:relative
+}
+.tune-roll{
+  position:relative;
+  min-height:300px
+}
+.tune-ruler{
+  height:28px;
+  position:sticky;
+  top:0;
+  background:#252525;
+  z-index:5;
+  border-bottom:1px solid #555;
+  font-size:10px;
+  line-height:27px;
+  pointer-events:none
+}
+.tune-ruler>span{
+  position:absolute;
+  white-space:nowrap;
+  border-left:1px solid #555;
+  padding-left:5px
+}
+.piano-keys{
+  position:sticky;
+  left:0;
+  top:28px;
+  width:64px;
+  z-index:4;
+  background:#b8b8b8;
+  color:#181818;
+  pointer-events:none
+}
+.piano-keys>div{
+  height:20px;
+  border-bottom:1px solid #777;
+  text-align:right;
+  padding:2px 8px;
+  font-size:10px
+}
+.piano-keys>.black-key{
+  background:#303030;
+  color:#aaa;
+  border-bottom-color:#151515
+}
+.tune-notes{
+  position:absolute;
+  top:28px;
+  background-color:#202020;
+  background-image:linear-gradient(to bottom,transparent 19px,#373737 19px),linear-gradient(to right,#373737 1px,transparent 1px);
+  touch-action:none;
+  outline:none
+}
+.tune-note{
+  position:absolute;
+  height:19px;
+  min-width:3px;
+  z-index:2;
+  background:#315f8c;
+  border:1px solid #6da4da;
+  border-radius:3px;
+  font-size:10px;
+  line-height:15px;
+  padding:0 5px;
+  color:#d1e7ff;
+  text-align:left;
+  overflow:hidden;
+  touch-action:none;
+  cursor:move;
+  user-select:none
+}
+.tune-note:hover{
+  background:#3d75a8
+}
+.tune-note.selected{
+  background:#5d98d1;
+  border-color:#c8e4ff;
+  color:#fff;
+  box-shadow:0 0 0 1px #a4d1ff
+}
+.note-ghost{
+  position:absolute;
+  height:19px;
+  border:1px solid #676767;
+  opacity:.6;
+  pointer-events:none
+}
+.tune-edge{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:6px;
+  cursor:ew-resize;
+  z-index:3
+}
+.tune-edge.left{
+  left:0
+}
+.tune-edge.right{
+  right:0
+}
+.pitch-trace{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none
+}
+.tune-marquee{
+  position:absolute;
+  background:#5296df22;
+  border:1px solid #72aff0;
+  z-index:4;
+  pointer-events:none
+}
+.tune-legend{
+  padding:5px 12px;
+  font-size:10px;
+  color:#888;
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+  border-top:1px solid #111
+}
+.tune-legend strong{
+  color:#dcb960;
+  font-weight:400
+}
+@media(max-width:650px){
+  .tune-toolbar{
+    gap:6px;
+    padding:5px;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    min-height:37px
+  }
+  .tune-toolbar>*{
+    flex-shrink:0
+  }
+  .tune-shortcuts{
+    display:none
+  }
+  .tune-title{
+    padding:5px;
+    font-size:11px
+  }
+  .tune-title span{
+    font-size:9px
+  }
+  .tune-legend{
+    font-size:9px;
+    padding:4px
+  }
+  .tune-note-fields{
+    min-height:38px
+  }
+}

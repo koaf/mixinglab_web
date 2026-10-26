@@ -1,6 +1,8 @@
 import { AudioEngine, DEFAULT_FX, LIMITS, clamp, normalizeSettings, validateSession, audible, sessionDuration, tailDuration, formatTime, dbGain, encodeWav, trackGraph } from './audio.js';
 import { readAutosave, writeAutosave } from './storage.js';
 import { preparePitchTracks } from './pitch.js';
+import { prepareTuneTracks, sourceBuffer, validateTune } from './tune.js';
+import { TuneEditor } from './tune-editor.js';
 
 const $ = selector => document.querySelector(selector);
 const engine = new AudioEngine();
@@ -44,8 +46,9 @@ async function run(task) {
   await startup;
   if (busy) return;
   busy = true; document.body.setAttribute('aria-busy', 'true');
+  $('#workspace').inert = state.view === 'tune';
   try { await task(); } catch (error) { status(error.message || String(error), true); }
-  finally { busy = false; document.body.removeAttribute('aria-busy'); }
+  finally { busy = false; $('#workspace').inert = false; document.body.removeAttribute('aria-busy'); }
 }
 function resetHistory(label) { history = [{ label, data: snapshot() }]; historyIndex = 0; dirty = false; }
 async function restart() { engine.update(state.tracks, state.master_db); if (engine.playing) { engine.pause(); await engine.play(state.tracks); } }
@@ -60,7 +63,7 @@ function render() {
   renderFiles(); renderSide(); renderWorkspace();
   $('#mode-wave').classList.toggle('active', state.view === 'waveform');
   $('#mode-multi').classList.toggle('active', state.view !== 'waveform');
-  $('#editor-tab').classList.toggle('active', state.view !== 'mixer'); $('#mixer-tab').classList.toggle('active', state.view === 'mixer');
+  $('#editor-tab').classList.toggle('active', !['mixer','tune'].includes(state.view)); $('#mixer-tab').classList.toggle('active', state.view === 'mixer'); $('#tune-tab').classList.toggle('active', state.view === 'tune');
   $('#editor-tab').textContent = `エディター: ${state.name}`;
   $('#duration').textContent = formatTime(sessionDuration(state.tracks));
   document.title = `${state.name} — meloa_web`;
@@ -87,7 +90,7 @@ function renderSide() {
   if (state.side === 'properties') {
     body.innerHTML = `<label class="property">セッション名<input type="text" id="session-name" value="${escape(state.name)}" maxlength="160"></label><div class="rack-title" style="--track:${trackColor(t)}">${escape(t.name)}</div><label class="property">トラック名<input type="text" id="track-name" value="${escape(t.name)}" maxlength="160"></label><label class="property">開始位置（秒）<input type="number" id="track-offset" value="${t.settings.offset.toFixed(3)}" min="0" max="1200" step=".01"></label><p>長さ: ${formatTime(t.buffer.duration)}</p><p>${t.buffer.sampleRate.toLocaleString()} Hz / ${t.buffer.numberOfChannels} ch</p><p class="side-note">元ファイル: ${escape(t.path)}</p><button data-action="delete" class="danger">トラックを削除</button>`; return;
   }
-  body.innerHTML = `<div class="fx-top"><span>トラックエフェクト</span><span class="spacer"></span><label><input id="fx-bypass" type="checkbox" ${t.settings.fx.bypass ? 'checked' : ''}>バイパス</label></div><div class="rack-title" style="--track:${trackColor(t)}">トラック: ${escape(t.name)}</div><p class="side-note">内蔵エフェクト（「適用」で再生に反映）</p>${fxGroups.map(([title, fields], i) => `<details class="fx-group" open><summary>${i + 1} ⏻ ${title}</summary><div class="fx-fields">${fields.map(([key, label, min, max, step, unit]) => `<label class="field"><span>${label}</span><input type="range" data-fx="${key}" data-unit="${unit}" min="${min}" max="${max}" step="${step}" value="${t.settings.fx[key]}" aria-label="${label}"><output>${fxLabel(t.settings.fx[key], unit)}</output></label>`).join('')}${i === 3 ? `<label class="formant-option"><input id="fx-formant" type="checkbox" ${t.settings.fx.formant ? 'checked' : ''}>フォルマントを保持 (声質を変えない)</label>` : ''}</div></details>`).join('')}<button data-action="apply-fx" class="primary">適用</button><button data-action="reset-fx">初期値に戻す</button><p class="side-note">VST3・ノート単位のピッチ／タイミング補正はWeb版では未対応です。EQ・コンプレッサー・リバーブ・ディレイ・ピッチシフターは再生と書き出しに適用します。ピッチは長さを保ったまま±12半音。デスクトップ版と同じフォルマント保持にも対応します。</p>`;
+  body.innerHTML = `<div class="fx-top"><span>トラックエフェクト</span><span class="spacer"></span><label><input id="fx-bypass" type="checkbox" ${t.settings.fx.bypass ? 'checked' : ''}>バイパス</label></div><div class="rack-title" style="--track:${trackColor(t)}">トラック: ${escape(t.name)}</div><p class="side-note">内蔵エフェクト（「適用」で再生に反映）</p>${fxGroups.map(([title, fields], i) => `<details class="fx-group" open><summary>${i + 1} ⏻ ${title}</summary><div class="fx-fields">${fields.map(([key, label, min, max, step, unit]) => `<label class="field"><span>${label}</span><input type="range" data-fx="${key}" data-unit="${unit}" min="${min}" max="${max}" step="${step}" value="${t.settings.fx[key]}" aria-label="${label}"><output>${fxLabel(t.settings.fx[key], unit)}</output></label>`).join('')}${i === 3 ? `<label class="formant-option"><input id="fx-formant" type="checkbox" ${t.settings.fx.formant ? 'checked' : ''}>フォルマントを保持 (声質を変えない)</label>` : ''}</div></details>`).join('')}<button data-action="apply-fx" class="primary">適用</button><button data-action="reset-fx">初期値に戻す</button><p class="side-note">VST3はWeb版では未対応です。ノート単位の補正は「ピッチ / タイミング」タブで編集できます。EQ・コンプレッサー・リバーブ・ディレイ・ピッチシフターは再生と書き出しに適用します。ピッチは長さを保ったまま±12半音。デスクトップ版と同じフォルマント保持にも対応します。</p>`;
 }
 function controls(t) {
   return `<div class="track-buttons"><button data-toggle="mute" data-track="${t.id}" class="chip ${t.settings.mute ? 'muted-on' : ''}" aria-label="${escape(t.name)} ミュート" aria-pressed="${t.settings.mute}">M</button><button data-toggle="solo" data-track="${t.id}" class="chip ${t.settings.solo ? 'solo-on' : ''}" aria-label="${escape(t.name)} ソロ" aria-pressed="${t.settings.solo}">S</button><button data-rack="${t.id}" class="chip">fx</button></div>`;
@@ -101,10 +104,11 @@ function renderWorkspace() {
     workspace.innerHTML = `<div class="mixer">${state.tracks.map(t => `<div class="channel" style="--track:${trackColor(t)}"><div class="channel-name">${escape(t.name)}</div>${controls(t)}<label>パン<input type="range" data-control="pan" data-track="${t.id}" min="-1" max="1" step=".01" value="${t.settings.pan}" aria-label="${escape(t.name)} パン"><output>${panLabel(t.settings.pan)}</output></label><input class="fader" type="range" data-control="gain_db" data-track="${t.id}" min="-60" max="12" step=".1" value="${t.settings.gain_db}" aria-label="${escape(t.name)} 音量"><output>${gainLabel(t.settings.gain_db)}</output><span class="routing">→ マスター</span></div>`).join('')}<div class="channel master"><div class="channel-name">マスター</div><span class="routing">ステレオ出力</span><input type="range" id="master-gain" class="fader" min="-60" max="12" step=".1" value="${state.master_db}" aria-label="マスター音量"><output>${gainLabel(state.master_db)}</output><span class="routing">48 kHz / 24 bit WAV</span></div></div>`;
     return;
   }
+  if (state.view === 'tune') { tuneEditor.render(); return; }
   if (state.view === 'waveform') {
     const t = selected() || state.tracks[0];
     workspace.innerHTML = `<div class="wave-view" data-wave="${t.id}"><div class="wave-label">${escape(t.name)} — ソース波形（エフェクト適用前）</div><canvas aria-label="${escape(t.name)} ソース波形"></canvas><div class="playhead"></div></div>`;
-    drawWave(workspace.querySelector('canvas'), t.buffer, '#2ce086', t.buffer.duration); tickPosition(); return;
+    drawWave(workspace.querySelector('canvas'), sourceBuffer(t), '#2ce086'); tickPosition(); return;
   }
   const headWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--head'));
   const available = Math.max(250, workspace.clientWidth - headWidth);
@@ -215,13 +219,14 @@ async function loadSession(data, { demo = false, restoring = false } = {}) {
     tracks.push(await decodeTrack(raw, item.name, basename(item.path || item.name), item.settings));
   }
   checkTracks(tracks);
-  const unsupported = data.master_inserts?.length || data.tracks.some(t => t.settings?.tune || t.tune || t.plugins?.length || t.inserts?.length);
+  await prepareTuneTracks(tracks, await engine.init());
+  const unsupported = data.master_inserts?.length || data.tracks.some(t => t.plugins?.length || t.inserts?.length);
   engine.pause(); engine.position = 0;
   state.name = session.name; state.master_db = session.master_db; state.tracks = tracks; state.selected = tracks[0]?.id || null;
   state.view = 'multitrack'; engine.update(tracks, state.master_db); stagedSession = null;
   fit(); resetHistory(restoring ? '自動保存から復元' : 'セッションを開く'); render(); await flushAutosave();
   status(`${restoring ? '自動保存から復元しました' : 'セッションを開きました'}: ${state.name}`);
-  if (unsupported) await info('Web版の対応範囲', '<p>このセッションに含まれるVST3・ノート単位のピッチ／タイミング補正は再現できません。Web版で保存したファイルには、これらの設定を含みません。元のセッションは保管してください。</p>');
+  if (unsupported) await info('Web版の対応範囲', '<p>このセッションに含まれるVST3は再現できません。Web版で保存したファイルにはVST3の設定を含みません。元のセッションは保管してください。</p>');
 }
 async function finishStaged() {
   const missing = stagedSession.data.tracks.filter(t => !t.audio && !stagedSession.files.has(basename(t.path))).map(t => basename(t.path));
@@ -257,6 +262,7 @@ async function exportMix() {
   engine.pause(); status('ミックスダウンを書き出しています…');
   const seconds = sessionDuration(state.tracks) + tailDuration(state.tracks), frames = Math.ceil(seconds * 48000);
   const context = new OfflineAudioContext(2, frames, 48000), master = context.createGain(); master.gain.value = dbGain(state.master_db); master.connect(context.destination);
+  await prepareTuneTracks(state.tracks, context);
   await preparePitchTracks(state.tracks, context);
   for (const t of state.tracks) if (audible(t, state.tracks)) trackGraph(context, t, state.tracks, master, 0, 0);
   const buffer = await context.startRendering();
@@ -267,6 +273,17 @@ async function restoreHistory(index) {
   engine.pause(); Object.assign(state, history[index].data, { tracks: history[index].data.tracks.map(t => ({ ...t, settings: structuredClone(t.settings) })) });
   historyIndex = index; engine.update(state.tracks, state.master_db); dirty = true; scheduleSave(); render(); status(history[index].label);
 }
+async function commitTune(value, label) {
+  const track = selected(); if (!track) return;
+  const tune = validateTune(value), candidate = { ...track, settings: { ...track.settings, tune } };
+  const playing = engine.playing; engine.pause(); status('ピッチ／タイミング補正を処理しています…');
+  try {
+    const context = await engine.init(); await prepareTuneTracks([candidate], context); await preparePitchTracks([candidate], context);
+    track.settings.tune = tune; track.rawBuffer = candidate.rawBuffer; track.buffer = candidate.buffer;
+    record(label); await flushAutosave(); render(); status(label);
+  } finally { if (playing) await engine.play(state.tracks); }
+}
+const tuneEditor = new TuneEditor({ container: $('#workspace'), active: () => state.view === 'tune', track: selected, tracks: () => state.tracks, span: () => state.span, busy: () => busy, run, status, seek: position => run(() => seek(position)), commit: commitTune });
 const actions = {
   import: () => $('#audio-input').click(), open: () => $('#session-input').click(), save: saveSession, export: exportMix,
   demo: async () => { if (!await replaceAllowed()) return; const response = await fetch(new URL('./demo/first_mix.meloa.json', import.meta.url)); if (!response.ok) throw Error('デモを取得できません。'); status('デモを読み込んでいます…'); await loadSession(await response.json(), { demo: true }); },
@@ -290,8 +307,8 @@ const actions = {
   play: async () => { if (engine.playing) engine.pause(); else if (state.tracks.length) { if (engine.position >= sessionDuration(state.tracks)) engine.position = 0; engine.update(state.tracks, state.master_db); await engine.play(state.tracks); } },
   stop: () => { engine.pause(); engine.position = 0; tickPosition(); }, start: () => seek(0), end: () => seek(sessionDuration(state.tracks)),
   fit, 'zoom-in': () => { state.span = Math.max(.5, state.span / 1.5); updateZoom(); renderWorkspace(); }, 'zoom-out': () => { state.span = Math.min(2400, state.span * 1.5); updateZoom(); renderWorkspace(); },
-  'pitch-info': () => info('ピッチ / タイミング', '<p>全体のキー変更は、エフェクトラックの「ピッチシフター」で±12半音を調整できます。ノート単位のピッチ解析・補正、タイミング補正はWeb版では未対応です。</p>'),
-  help: () => info('meloa_web', '<p>音源を読み込み、音量・パン・M（ミュート）・S（ソロ）を調整します。クリップは左右にドラッグして開始位置を変更、ダブルクリックで波形を表示します。空のレーンや時間目盛りをクリックすると再生位置が変わります。</p><p>エフェクトは「適用」で反映。「保存」は音源を含むセッション、「WAV書き出し」は48 kHz / 24 bitのステレオ音声を保存します。編集は端末内に自動保存されます。</p><p>Space: 再生／一時停止 · Home/End: 先頭／末尾<br>9/0: 波形／マルチトラック · −/=: ズーム · \\: 全体表示<br>Ctrl+I/O/S: 読み込み／開く／保存 · Ctrl+Z: 取り消し</p><p>最大12トラック、1本10分、合計20分。形式対応はブラウザーに依存します。VST3・ノート単位のピッチ／タイミング補正・録音は未対応です。デスクトップ版の全機能との互換性はありません。</p><p>初回読み込み完了後はオフラインでも利用できます。対応ブラウザーではアドレスバーからアプリとしてインストールできます。iPhone/iPadではSafariの共有 →「ホーム画面に追加」を使います。</p>')
+  'pitch-info': () => { state.view = 'tune'; render(); },
+  help: () => info('meloa_web', '<p>音源を読み込み、音量・パン・M（ミュート）・S（ソロ）を調整します。クリップは左右にドラッグして開始位置を変更、ダブルクリックで波形を表示します。空のレーンや時間目盛りをクリックすると再生位置が変わります。</p><p>エフェクトは「適用」で反映。「保存」は音源を含むセッション、「WAV書き出し」は48 kHz / 24 bitのステレオ音声を保存します。編集は端末内に自動保存されます。</p><p>Space: 再生／一時停止 · Home/End: 先頭／末尾<br>9/0: 波形／マルチトラック · −/=: ズーム · \\: 全体表示<br>Ctrl+I/O/S: 読み込み／開く／保存 · Ctrl+Z: 取り消し</p><p>最大12トラック、1本10分、合計20分。形式対応はブラウザーに依存します。VST3・録音は未対応です。ピッチ／タイミングタブでは、ノートを上下にドラッグして音程、左右で発音位置、両端で長さを調整できます。キー8で開きます。デスクトップ版の全機能との互換性はありません。</p><p>初回読み込み完了後はオフラインでも利用できます。対応ブラウザーではアドレスバーからアプリとしてインストールできます。iPhone/iPadではSafariの共有 →「ホーム画面に追加」を使います。</p>')
 };
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]');
@@ -304,8 +321,8 @@ document.addEventListener('click', event => {
     const t = state.tracks.find(t => t.id === toggle.dataset.track); t.settings[toggle.dataset.toggle] = !t.settings[toggle.dataset.toggle];
     engine.update(state.tracks, state.master_db); record(toggle.dataset.toggle === 'mute' ? 'ミュートを変更' : 'ソロを変更'); renderWorkspace(); return;
   }
-  const rack = event.target.closest('[data-rack]'); if (rack) { state.selected = rack.dataset.rack; state.side = 'rack'; render(); return; }
-  const select = event.target.closest('[data-select]'); if (select && !event.target.closest('input,button')) { state.selected = select.dataset.select; document.querySelectorAll('.file-row').forEach(el => el.classList.toggle('selected', el.dataset.select === state.selected)); renderSide(); if (state.view !== 'multitrack') renderWorkspace(); else document.querySelectorAll('.track').forEach(el => el.classList.toggle('selected', el.querySelector('[data-select]').dataset.select === state.selected)); return; }
+  const rack = event.target.closest('[data-rack]'); if (rack) { if (busy) return; state.selected = rack.dataset.rack; state.side = 'rack'; render(); return; }
+  const select = event.target.closest('[data-select]'); if (select && !event.target.closest('input,button')) { if (busy) return; state.selected = select.dataset.select; document.querySelectorAll('.file-row').forEach(el => el.classList.toggle('selected', el.dataset.select === state.selected)); renderSide(); if (state.view !== 'multitrack') renderWorkspace(); else document.querySelectorAll('.track').forEach(el => el.classList.toggle('selected', el.querySelector('[data-select]').dataset.select === state.selected)); return; }
   const historyButton = event.target.closest('[data-history]'); if (historyButton) { void run(() => restoreHistory(Number(historyButton.dataset.history))); return; }
   const seekTarget = event.target.closest('[data-seek]');
   if (seekTarget && !event.target.closest('[data-clip]')) { const timeline = $('.timeline'); void run(() => seek((event.clientX - seekTarget.getBoundingClientRect().left) / Number(timeline.dataset.pixels))); }
@@ -313,6 +330,7 @@ document.addEventListener('click', event => {
 });
 document.addEventListener('click', event => { if (!event.target.closest('nav')) document.querySelectorAll('nav details').forEach(el => el.open = false); });
 document.addEventListener('dblclick', event => {
+  if (busy) return;
   const el = event.target.closest('[data-clip],[data-select]'); if (!el || event.target.closest('button,input')) return;
   state.selected = el.dataset.clip || el.dataset.select; state.view = 'waveform'; render();
 });
@@ -339,8 +357,8 @@ async function endGesture(cancelled = false) {
   if (cancelled) g.track.settings.offset = g.offset; else record('クリップを移動');
   render(); if (g.playing) await engine.play(state.tracks);
 }
-document.addEventListener('pointerup', () => { void run(() => endGesture()); });
-document.addEventListener('pointercancel', () => { void run(() => endGesture(true)); });
+document.addEventListener('pointerup', () => { if (gesture) void run(() => endGesture()); });
+document.addEventListener('pointercancel', () => { if (gesture) void run(() => endGesture(true)); });
 document.addEventListener('input', event => {
   const el = event.target;
   if (el.matches('[data-control]')) {
@@ -367,7 +385,7 @@ document.addEventListener('keydown', event => {
   if (event.target.closest('[data-select]') && event.key === 'Enter') { event.target.click(); return; }
   if (event.code === 'Space' && event.target.closest('button,summary')) return;
   const mod = event.ctrlKey || event.metaKey;
-  const action = mod ? ({ i: 'import', o: 'open', s: 'save', z: event.shiftKey ? 'redo' : 'undo', y: 'redo' })[event.key.toLowerCase()] : ({ ' ': 'play', Home: 'start', End: 'end', '9': 'waveform', '0': 'multitrack', '=': 'zoom-in', '+': 'zoom-in', '-': 'zoom-out', '\\': 'fit' })[event.key];
+  const action = mod ? ({ i: 'import', o: 'open', s: 'save', z: event.shiftKey ? 'redo' : 'undo', y: 'redo' })[event.key.toLowerCase()] : ({ ' ': 'play', Home: 'start', End: 'end', '8': 'pitch-info', '9': 'waveform', '0': 'multitrack', '=': 'zoom-in', '+': 'zoom-in', '-': 'zoom-out', '\\': 'fit' })[event.key];
   if (action) { event.preventDefault(); void run(actions[action]); }
 });
 let dragDepth = 0;

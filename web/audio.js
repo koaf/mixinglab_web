@@ -1,4 +1,5 @@
 import { preparePitchTracks, playbackBuffer } from './pitch.js';
+import { validateTune, prepareTuneTracks } from './tune.js';
 export const DEFAULT_FX = Object.freeze({ bypass: false, low_db: 0, mid_db: 0, high_db: 0, mid_hz: 1000, mid_q: .7, threshold_db: -18, ratio: 1, attack_ms: 12, release_ms: 120, makeup_db: 0, reverb: 0, delay: 0, delay_ms: 250, pitch: 0, formant: true });
 export const DEFAULT_SETTINGS = Object.freeze({ gain_db: 0, pan: 0, mute: false, solo: false, offset: 0 });
 export const LIMITS = { tracks: 12, duration: 600, total: 1200, bytes: 120 * 1024 * 1024 };
@@ -11,7 +12,7 @@ const number = (value, fallback, min, max) => Number.isFinite(value) ? clamp(val
 export function normalizeSettings(settings = {}) {
   const fx = settings.fx || {};
   return {
-    gain_db: number(settings.gain_db, 0, -60, 12), pan: number(settings.pan, 0, -1, 1), mute: !!settings.mute, solo: !!settings.solo, offset: number(settings.offset, 0, 0, 1200),
+    gain_db: number(settings.gain_db, 0, -60, 12), pan: number(settings.pan, 0, -1, 1), mute: !!settings.mute, solo: !!settings.solo, offset: number(settings.offset, 0, 0, 1200), tune: validateTune(settings.tune),
     fx: Object.fromEntries(Object.entries(DEFAULT_FX).map(([key, value]) => [key, typeof value === 'boolean' ? typeof fx[key] === 'boolean' ? fx[key] : value : number(fx[key], value, ...FX_RANGES[key])]))
   };
 }
@@ -113,6 +114,7 @@ export class AudioEngine {
   async play(tracks) {
     await this.init(true);
     this.pause();
+    await prepareTuneTracks(tracks, this.context);
     await preparePitchTracks(tracks, this.context);
     this.master.gain.value = dbGain(this.masterDb);
     this.startedAt = this.context.currentTime + .03;
